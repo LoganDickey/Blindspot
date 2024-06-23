@@ -6,6 +6,7 @@ import '@/styles/globals.css';
 import '@/styles/colors.css';
 
 import { siteConfig } from '@/constant/config';
+import { GameProvider } from '@/contexts/gameContext';
 
 // !STARTERCONF Change these default meta
 // !STARTERCONF Look at @/constant/config to change them
@@ -20,9 +21,9 @@ export const metadata: Metadata = {
   // !STARTERCONF this is the default favicon, you can generate your own from https://realfavicongenerator.net/
   // ! copy to /favicon folder
   icons: {
-    icon: '/favicon/favicon.ico',
-    shortcut: '/favicon/favicon-16x16.png',
-    apple: '/favicon/apple-touch-icon.png',
+    icon: '/images/logo.jpeg',
+    shortcut: '/images/logo.jpeg',
+    apple: '/images/logo.jpeg',
   },
   manifest: `/favicon/site.webmanifest`,
   openGraph: {
@@ -56,7 +57,9 @@ export default function RootLayout({
 }) {
   return (
     <html>
-      <body>{children}</body>
+      <GameProvider>
+        <body>{children}</body>
+      </GameProvider>
     </html>
   );
 }
