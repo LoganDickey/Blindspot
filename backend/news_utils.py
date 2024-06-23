@@ -31,7 +31,7 @@ All topics should be broad and general, and should be something talked about on 
 
 ## Example 3
 [Initial Topic]: Stocks
-[Generated Topics]: [Anime, Business, US Politics, Environmentalism, Fashion]
+[Generated Topics]: [Stocks, Business, US Politics, Environmentalism, Fashion]
 
 ## TASK
 [Initial Topic]: {topic}
