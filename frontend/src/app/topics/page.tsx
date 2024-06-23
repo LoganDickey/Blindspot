@@ -20,6 +20,60 @@ import { fetchArticlesForTopic } from '@/app/game/page';
 import { useGameContext } from '@/contexts/gameContext';
 import { withTopicSelectionGuard } from '@/hocs/withGameGuard';
 
+const getBackgroundColor = (index: number) => {
+  const colors = [
+    'bg-blue-100',
+    'bg-green-100',
+    'bg-yellow-100',
+    'bg-orange-100',
+    'bg-red-100',
+  ];
+  return colors[Math.min(index, colors.length - 1)];
+};
+
+const getTextColor = (index: number) => {
+  const colors = [
+    'text-blue-800',
+    'text-green-800',
+    'text-yellow-800',
+    'text-orange-800',
+    'text-red-800',
+  ];
+  return colors[Math.min(index, colors.length - 1)];
+};
+
+const getIconColor = (index: number) => {
+  const colors = [
+    'text-blue-500',
+    'text-green-500',
+    'text-yellow-500',
+    'text-orange-500',
+    'text-red-500',
+  ];
+  return colors[Math.min(index, colors.length - 1)];
+};
+
+const getBadgeColor = (index: number) => {
+  const colors = [
+    'border-blue-500 text-blue-500',
+    'border-green-500 text-green-500',
+    'border-yellow-500 text-yellow-500',
+    'border-orange-500 text-orange-500',
+    'border-red-500 text-red-500',
+  ];
+  return colors[Math.min(index, colors.length - 1)];
+};
+
+const getIcon = (index: number) => {
+  const icons = ['🌱', '🌿', '🌳', '🔍', '🏆'];
+  return icons[Math.min(index, icons.length - 1)];
+};
+
+const getDifficultyLabel = (index: number) => {
+  const labels = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];
+  return labels[Math.min(index, labels.length - 1)];
+};
+
 const PREDEFINED_TOPICS = [
   'Politics',
   'Technology',
@@ -108,8 +162,17 @@ const TopicSelectionPage: React.FC = () => {
         setTopics(similarTopics);
 
         // Fetch initial articles for the first topic
-        const initialArticles = await fetchArticlesForTopic(similarTopics[0]);
-        setArticlesForTopic(localSelectedTopic, initialArticles);
+        fetchArticlesForTopic(similarTopics[0]).then((initialArticles) => {
+          setArticlesForTopic(similarTopics[0], initialArticles);
+        });
+
+        // Loop through async and fetch the rest of the articles
+        for (let i = 1; i < similarTopics.length; i++) {
+          fetchArticlesForTopic(similarTopics[i]).then((articles) => {
+            console.log(articles);
+            setArticlesForTopic(similarTopics[i], articles);
+          });
+        }
 
         setIsDialogOpen(true);
       } catch (error) {
@@ -119,10 +182,23 @@ const TopicSelectionPage: React.FC = () => {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      addCustomTopic();
+    }
+  };
+
   const handleConfirm = () => {
     startNewGame();
     setGameState('playing');
     router.push('/game');
+  };
+
+  const handleCloseDialog = () => {
+    setIsStarting(false);
+    setIsDialogOpen(false);
+    setLocalSelectedTopic(null);
+    setGeneratedTopics([]);
   };
 
   return (
@@ -184,6 +260,7 @@ const TopicSelectionPage: React.FC = () => {
                 type='text'
                 value={customTopic}
                 onChange={(e) => setCustomTopic(e.target.value)}
+                onKeyPress={handleKeyPress}
                 placeholder={`Try "${PLACEHOLDER_TOPICS[placeholderIndex]}"`}
                 className='flex-grow'
               />
@@ -236,21 +313,51 @@ const TopicSelectionPage: React.FC = () => {
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+      <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
+        <DialogContent className='bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-2xl max-w-2xl mx-auto'>
           <DialogHeader>
-            <DialogTitle>Topic Progression</DialogTitle>
+            <DialogTitle className='text-3xl font-bold text-center text-indigo-800'>
+              Your Blindspot Journey
+            </DialogTitle>
           </DialogHeader>
-          <div className='mt-4'>
+          <div className='mt-6 space-y-4'>
             {generatedTopics.map((topic, index) => (
-              <p key={index} className='text-lg text-gray-700'>
-                Topic {index + 1}: {topic}
-              </p>
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className={`flex items-center space-x-4 p-4 rounded-lg ${getBackgroundColor(
+                  index
+                )}`}
+              >
+                <div className='flex-shrink-0'>
+                  <span className={`text-2xl ${getIconColor(index)}`}>
+                    {getIcon(index)}
+                  </span>
+                </div>
+                <div className='flex-grow'>
+                  <h3
+                    className={`text-lg font-semibold ${getTextColor(index)}`}
+                  >
+                    Level {index + 1}
+                  </h3>
+                  <p className={`text-md ${getTextColor(index)}`}>{topic}</p>
+                </div>
+                <div className='flex-shrink-0'>
+                  <Badge variant='outline' className={getBadgeColor(index)}>
+                    {getDifficultyLabel(index)}
+                  </Badge>
+                </div>
+              </motion.div>
             ))}
           </div>
-          <DialogFooter>
-            <Button onClick={handleConfirm} className='mt-4'>
-              Confirm
+          <DialogFooter className='flex justify-center mt-8'>
+            <Button
+              onClick={handleConfirm}
+              className='px-8 py-3 text-lg text-white font-semibold rounded-full transition-all duration-300 ease-in-out transform hover:scale-105'
+            >
+              Begin Your Journey
             </Button>
           </DialogFooter>
         </DialogContent>

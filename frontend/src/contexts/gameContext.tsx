@@ -14,12 +14,20 @@ interface Article {
   date: string;
   real: boolean;
   topic: string;
+  url?: string;
+  difficulty: number;
 }
 
 interface TopicAccuracy {
   topic: string;
   correct: number;
   total: number;
+}
+
+interface UserAnswer {
+  articleId: string;
+  userAnswer: boolean;
+  isCorrect: boolean;
 }
 
 interface GameContextType {
@@ -34,6 +42,7 @@ interface GameContextType {
   streak: number;
   elapsedTime: number;
   topicAccuracies: TopicAccuracy[];
+  userAnswers: UserAnswer[];
   setGameState: (state: GameState) => void;
   setTopics: (topics: string[]) => void;
   setArticlesForTopic: (topic: string, articles: Article[]) => void;
@@ -69,6 +78,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
   const [streak, setStreak] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [topicAccuracies, setTopicAccuracies] = useState<TopicAccuracy[]>([]);
+  const [userAnswers, setUserAnswers] = useState<UserAnswer[]>([]);
 
   useEffect(() => {
     const storedUuid = localStorage.getItem('blindspot_uuid');
@@ -128,6 +138,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     const currentArticle = getCurrentArticle();
     if (currentArticle) {
       const isCorrect = userAnswer === currentArticle.real;
+
       setTopicAccuracies((prevAccuracies) => {
         const topicIndex = prevAccuracies.findIndex(
           (a) => a.topic === currentArticle.topic
@@ -153,6 +164,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       });
 
+      setUserAnswers((prevAnswers) => [
+        ...prevAnswers,
+        {
+          articleId: currentArticle.id,
+          userAnswer,
+          isCorrect,
+        },
+      ]);
+
       setScore((prevScore) => prevScore + (isCorrect ? 100 : 0));
       setStreak((prevStreak) => (isCorrect ? prevStreak + 1 : 0));
     }
@@ -167,6 +187,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
     setTopicAccuracies([]);
     setCurrentTopicIndex(0);
     setCurrentArticleIndex(0);
+    setUserAnswers([]);
   };
 
   const endGame = () => {
@@ -191,6 +212,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({
         streak,
         elapsedTime,
         topicAccuracies,
+        userAnswers,
         setGameState,
         setTopics,
         setArticlesForTopic,

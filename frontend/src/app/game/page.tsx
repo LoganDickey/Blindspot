@@ -19,6 +19,12 @@ import { useGameContext } from '@/contexts/gameContext';
 import { withGamePageGuard } from '@/hocs/withGameGuard';
 
 const TOTAL_ARTICLES = 10;
+const EXPECTED_GAME_DURATION = 180; // 3 minutes in seconds
+const BASE_SCORE = 2000;
+const TIME_FACTOR = 300;
+const DIFFICULTY_FACTOR = 100;
+const MIN_DIFFICULTY = 1;
+const MAX_DIFFICULTY = 10;
 
 // Types
 interface Article {
@@ -29,6 +35,8 @@ interface Article {
   date: string;
   real: boolean;
   topic: string;
+  url?: string;
+  difficulty: number;
 }
 
 // Function to fetch articles for a topic from the backend
@@ -43,8 +51,8 @@ export const fetchArticlesForTopic = async (
     },
     body: JSON.stringify({
       topic: topic,
-      amount: 2, // You can adjust the amount as needed
-      difficulty: 10, // You can adjust the difficulty as needed
+      amount: 2,
+      difficulty: diff || 5,
     }),
   });
 
@@ -52,16 +60,14 @@ export const fetchArticlesForTopic = async (
     throw new Error('Failed to fetch articles');
   }
 
-  return response.json();
+  const res = response.json();
+  // console.log(res);
+  return res;
 };
 
 const GamePage: React.FC = () => {
   const router = useRouter();
   const {
-    topics,
-    articleMap,
-    currentTopicIndex,
-    currentArticleIndex,
     score,
     articlesRead,
     streak,
@@ -70,15 +76,16 @@ const GamePage: React.FC = () => {
     getCurrentArticle,
     moveToNextArticle,
     answerCurrentArticle,
-    setArticlesForTopic,
-    getNextTopicToFetch,
     endGame,
+    updateGameStats,
+    articleMap,
   } = useGameContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [showFireEmoji, setShowFireEmoji] = useState(false);
+  const [difficulty, setDifficulty] = useState(5); // Starting difficulty
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -88,31 +95,25 @@ const GamePage: React.FC = () => {
     return () => clearInterval(timer);
   }, [elapsedTime, updateElapsedTime]);
 
-  const fetchArticlesIfNeeded = useCallback(async () => {
-    const topicToFetch = getNextTopicToFetch();
-    if (topicToFetch && !isLoading) {
-      setIsLoading(true);
-      try {
-        const articles = await fetchArticlesForTopic(
-          topicToFetch,
-          articlesRead + 1
-        );
-        setArticlesForTopic(topicToFetch, articles);
-        console.log(`Fetched articles for topic: ${topicToFetch}`);
-        console.log(articles);
-      } catch (error) {
-        console.error('Failed to fetch articles:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [getNextTopicToFetch, setArticlesForTopic]);
+  const calculateScore = (isCorrect: boolean, timeSpent: number) => {
+    if (!isCorrect) return 0;
+    const timeScore = Math.max(
+      0,
+      BASE_SCORE - TIME_FACTOR * Math.log(timeSpent + 1)
+    );
+    const difficultyBonus = DIFFICULTY_FACTOR * difficulty;
+    return Math.round(timeScore + difficultyBonus);
+  };
 
-  useEffect(() => {
-    if (!articleMap.has(topics[currentTopicIndex])) {
-      fetchArticlesIfNeeded();
-    }
-  }, [fetchArticlesIfNeeded, currentTopicIndex, articleMap, topics]);
+  const updateDifficulty = (isCorrect: boolean) => {
+    setDifficulty((prevDifficulty) => {
+      const change = isCorrect ? 0.5 : -0.25;
+      return Math.min(
+        MAX_DIFFICULTY,
+        Math.max(MIN_DIFFICULTY, prevDifficulty + change)
+      );
+    });
+  };
 
   const handleAnswer = useCallback(
     async (userAnswer: boolean) => {
@@ -122,20 +123,29 @@ const GamePage: React.FC = () => {
       setIsLoading(true);
       const isCorrect = userAnswer === currentArticle.real;
 
+      const newScore = calculateScore(
+        isCorrect,
+        elapsedTime / (articlesRead + 1)
+      );
+      const newStreak = isCorrect ? streak + 1 : 0;
+      // const newArticlesRead = articlesRead + 1;
+
+      updateGameStats(score + newScore, articlesRead, newStreak);
       answerCurrentArticle(userAnswer);
+      updateDifficulty(isCorrect);
 
       setFeedbackMessage(
         isCorrect ? 'Correct! Well done.' : 'Incorrect. Stay vigilant!'
       );
       setShowFeedback(true);
 
-      if (isCorrect && streak > 0) {
+      if (isCorrect && newStreak > 1) {
         setShowFireEmoji(true);
         setTimeout(() => setShowFireEmoji(false), 2000);
       }
 
       setTimeout(() => {
-        if (articlesRead + 1 >= TOTAL_ARTICLES) {
+        if (articlesRead >= TOTAL_ARTICLES - 1) {
           endGame();
           router.push('/game-over');
         } else {
@@ -148,8 +158,11 @@ const GamePage: React.FC = () => {
     [
       getCurrentArticle,
       answerCurrentArticle,
+      updateGameStats,
       streak,
       articlesRead,
+      score,
+      elapsedTime,
       endGame,
       router,
       moveToNextArticle,
@@ -157,10 +170,11 @@ const GamePage: React.FC = () => {
   );
 
   const currentArticle = getCurrentArticle();
+  // console.log(currentArticle, articleMap);
 
   // Render current article
   const renderArticle = () => {
-    if (isLoading || !currentArticle) {
+    if (!currentArticle) {
       return <div className='text-center'>Loading article...</div>;
     }
 
@@ -211,6 +225,18 @@ const GamePage: React.FC = () => {
             </TooltipTrigger>
             <TooltipContent>
               <p>Current article topic</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Badge variant='secondary'>
+                Difficulty: {difficulty.toFixed(1)}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Current game difficulty</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

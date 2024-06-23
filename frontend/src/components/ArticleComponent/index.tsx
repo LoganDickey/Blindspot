@@ -10,6 +10,19 @@ interface ArticleProps {
   date: string;
 }
 
+const fakeAuthorNames = [
+  'Alexandra Blake',
+  // 'Jordan Turner',
+  // 'Morgan Hart',
+  // 'Taylor Quinn',
+  // 'Casey Morgan',
+  // 'Riley Brooks',
+  // 'Jamie Parker',
+  // 'Drew Harper',
+  // 'Cameron Ellis',
+  // 'Sydney Monroe',
+];
+
 const ArticleComponent: React.FC<ArticleProps> = ({
   title,
   content,
@@ -29,7 +42,12 @@ const ArticleComponent: React.FC<ArticleProps> = ({
             {title}
           </h2>
           <div className='text-sm text-gray-500 font-sans'>
-            <span className='font-medium'>{author || 'Unknown'}</span> •{' '}
+            <span className='font-medium'>
+              {author ||
+                fakeAuthorNames[
+                  Math.floor(Math.random() * fakeAuthorNames.length)
+                ]}
+            </span>{' '}
             <span>{date}</span>
           </div>
         </CardHeader>
