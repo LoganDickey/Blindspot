@@ -13,7 +13,7 @@ news_api_key = os.getenv("NEWS_API_KEY")
 def generate_topic_list(topic: str):
     prompt = f"""# OBJECTIVE
 You are given an [Initial Topic]. From this [Initial Topic], your task is to generate an ordered list of 5 topics.
-The first topic should be equivalent to the [Initial Topic]. If this topic is too specific, broaden it to a more general topic talked about on television.
+The first topic should be the [Initial Topic]. If this topic is not found in the news, broaden it to a more general topic.
 The second new topic should be closely related to but different from the [Initial Topic]
 The third and fourth new topics should be only mildly related to the [Initial Topic]
 The fifth topic should be completely different from any of the previous topics.
@@ -107,13 +107,13 @@ def generate_fake_article(topic: str, difficulty: int):
     """
 
     prompt = f"Task: Given a topic and difficulty, compose a fake news article about the topic.\n"
-    prompt += f"The difficulty is between 1 and 10. Low difficulties should be easy to spot as fake by anyone. High difficulties should be difficult for even experts on the topic to spot as fake.\n"
-    prompt += f"The article should be believeable but fake. Do not write about a real event. Do not write about artificial intelligence unless the topic is closely related to AI.\n"
+    prompt += f"The difficulty is between 1 and 10, where 1 is easy to spot as fake by anyone, and 10 is difficult for even experts on the topic to determine fake.\n"
+    prompt += f"Choose a very specific thing to write about based on the given topic. The produced article should be as realistic as possible but still fake. Do not write about a real event. Do not write about AI unless the topic is very closely related.\n"
     prompt += f"The composed article should have the following fields:\n\n"
     prompt += f"Title: The title of the article.\n"
     prompt += f"Description: A one or two sentence description of the article.\n"
-    prompt += f"Author: The author of the article. Can be a real or fake name. Outlandish names encouraged for lower difficulties.\n"
-    prompt += f"Content: The first paragraph or two of the article. Make up a story about the topic that is believable but fake.\n"
+    prompt += f"Author: The author of the article. Can be a real or fake name. Outlandish names encouraged for lower difficulties. Do not put 'Dr.' in the name.\n"
+    prompt += f"Content: The first two or three paragraphs of the article. Include line breaks between paragraphs. Make up a story about the topic that is believable but fake.\n"
     prompt += f"PublishedAt: Date the article was published in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ). Make up a date in 2024 before June.\n\n"
     prompt += f"Topic: {topic}\n"
     prompt += f"Difficulty: {difficulty}\n"

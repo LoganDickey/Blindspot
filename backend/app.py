@@ -32,8 +32,16 @@ def fetch_articles():
     if amount < 1:
         return jsonify({"error": "Amount of articles must be greater than 0"})
 
-    real_article_amount = randint(1, amount)
-    fake_article_amount = amount - real_article_amount
+    fake_article_chance = 0.6
+
+    fake_article_amount = 0
+    real_article_amount = 0
+
+    for _ in range(amount):
+        if randint(0, 100) < fake_article_chance * 100:
+            fake_article_amount += 1
+        else:
+            real_article_amount += 1
 
     real_articles = fetch_real_articles(topic, real_article_amount)
     fake_articles = generate_fake_articles(
