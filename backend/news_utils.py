@@ -56,7 +56,7 @@ def fetch_real_articles(topic: str, amount: int):
     articles = articles[:amount]
 
     extracted_keys = ['author', 'title',
-                      'description', 'content', 'publishedAt']
+                      'description', 'content', 'publishedAt', 'url']
 
     for article in articles:
         article['content'] = get_real_article_content(article)
@@ -128,5 +128,6 @@ def generate_fake_article(topic: str, difficulty: int):
         "content": response['content'],
         "publishedAt": response['publishedAt'],
         "difficulty": difficulty,
-        "real": False
+        "real": False,
+        "url": None
     }
