@@ -31,7 +31,7 @@ All topics should be broad and general, and should be something talked about on 
 
 ## Example 3
 [Initial Topic]: Stocks
-[Generated Topics]: [Anime, Business, US Politics, Environmentalism, Fashion]
+[Generated Topics]: [Stocks, Business, US Politics, Environmentalism, Fashion]
 
 ## TASK
 [Initial Topic]: {topic}
@@ -108,7 +108,8 @@ def generate_fake_article(topic: str, difficulty: int):
 
     prompt = f"Task: Given a topic and difficulty, compose a fake news article about the topic.\n"
     prompt += f"The difficulty is between 1 and 10, where 1 is easy to spot as fake by anyone, and 10 is difficult for even experts on the topic to determine fake.\n"
-    prompt += f"Choose a very specific thing to write about based on the given topic. The produced article should be as realistic as possible but still fake. Do not write about a real event. Do not write about AI unless the topic is very closely related.\n"
+    prompt += f"Choose a very specific thing to write about based on the given topic. The produced article should be as realistic as possible but still fake.\n"
+    prompt += f"DO NOT write about AI, artificial intelligence, or machine learning. DO NOT write the word 'revolutionary' or 'breakthrough'.\n\n"
     prompt += f"The composed article should have the following fields:\n\n"
     prompt += f"Title: The title of the article.\n"
     prompt += f"Description: A one or two sentence description of the article.\n"
