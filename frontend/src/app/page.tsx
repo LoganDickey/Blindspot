@@ -1,11 +1,13 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+
 import { useGameContext } from '@/contexts/gameContext';
 import { withHomeGuard } from '@/hocs/withGameGuard';
 
@@ -41,7 +43,7 @@ const HomePage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Card className='mb-12'>
-            <CardContent className='p-8'>
+            <CardContent className='p-8 pl-12'>
               <div className='flex flex-col md:flex-row items-center gap-8'>
                 <div className='flex-1'>
                   <h2 className='text-3xl font-semibold text-gray-800 mb-4'>

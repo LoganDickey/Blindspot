@@ -1,5 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 interface ArticleProps {
@@ -28,7 +29,8 @@ const ArticleComponent: React.FC<ArticleProps> = ({
             {title}
           </h2>
           <div className='text-sm text-gray-500 font-sans'>
-            <span className='font-medium'>{author}</span> • <span>{date}</span>
+            <span className='font-medium'>{author || 'Unknown'}</span> •{' '}
+            <span>{date}</span>
           </div>
         </CardHeader>
         <CardContent className='pt-6'>

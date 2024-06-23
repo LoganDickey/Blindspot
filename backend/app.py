@@ -1,29 +1,45 @@
-from flask import Flask, request
-from news_utils import fetch_real_articles
+from flask import Flask, request, jsonify
+from news_utils import fetch_real_articles, generate_topics, generate_fake_articles
+from random import shuffle, randint
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)  # This will enable CORS for all routes
 
 @app.route("/")
 def status():
     return "Blindspot Backend Online!"
 
-
-@app.route("/fetch_articles", methods=["GET"])
-def fetch_articles():
+@app.route("/generate_topics", methods=["POST"])
+def generate_topics2():
     data = request.get_json()
+
     topic: str = data['topic']
-    amount: str = data['amount']
 
-    # find the real news
-    real_articles = fetch_real_articles(topic, amount)
+    return jsonify(generate_topics(topic))
 
-    # use the model to make fake news
+@app.route("/fetch_articles", methods=["POST"])
+def fetch_articles2():
+    data = request.get_json()
 
-    # combine the real and fake news, randomize the order
+    topic: str = data['topic']  # topic of the articles
+    amount: int = data['amount']  # number of articles to fetch
+    difficulty: int = data['difficulty']  # difficulty of spotting fake (1-10)
 
-    return real_articles
+    if amount < 1:
+        return jsonify({"error": "Amount of articles must be greater than 0"})
 
+    real_article_amount = randint(1, amount)
+    fake_article_amount = amount - real_article_amount
+
+    real_articles = fetch_real_articles(topic, real_article_amount)
+    fake_articles = generate_fake_articles(
+        topic, fake_article_amount, difficulty)
+
+    articles = [*real_articles, *fake_articles]
+    shuffle(articles)
+
+    return jsonify(articles)
 
 if __name__ == '__main__':
     app.run(port=8080)
