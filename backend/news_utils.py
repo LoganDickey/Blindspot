@@ -113,7 +113,7 @@ def generate_fake_article(topic: str, difficulty: int):
     prompt += f"The composed article should have the following fields:\n\n"
     prompt += f"Title: The title of the article. DO NOT include the words 'revolutionary', 'breakthrough', 'new', 'secret', 'hidden', or 'scientist'. Mimic the style of real article titles. Be specific.\n"
     prompt += f"Description: A one or two sentence description of the article.\n"
-    prompt += f"Author: A random but believeable name of an author. Can be real or fake. Do not put 'Dr.' in the name. Occasionally include multiple authors. Occasionally shorten parts of the name with initials.\n"
+    prompt += f"Author: A random but believeable name of an author. Use a diverse set of names from any nationality. Do not put 'Dr.' in the name. Occasionally include multiple authors.\n"
     prompt += f"Content: The first two or three paragraphs of the article. Include line breaks between paragraphs. Make up a story about the topic that is highly believable but fake. Use realistic quotes and specific numbers. Do not reveal that the article is fake. Do not include the words 'unprecedented', 'surprising', 'unexpected', or similar. Do not begin the article with the word 'In'.\n"
     prompt += f"PublishedAt: Date the article was published in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ). Make up a date in 2024 before June.\n\n"
     prompt += f"Topic: {topic}\n"
