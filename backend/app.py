@@ -1,25 +1,28 @@
 from flask import Flask, request, jsonify
-from news_utils import fetch_real_articles, generate_topics, generate_fake_articles
+from news_utils import fetch_real_articles, generate_topic_list, generate_fake_articles
 from random import shuffle, randint
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
+
 @app.route("/")
 def status():
     return "Blindspot Backend Online!"
 
+
 @app.route("/generate_topics", methods=["POST"])
-def generate_topics2():
+def generate_topics():
     data = request.get_json()
 
     topic: str = data['topic']
 
-    return jsonify(generate_topics(topic))
+    return jsonify(generate_topic_list(topic))
+
 
 @app.route("/fetch_articles", methods=["POST"])
-def fetch_articles2():
+def fetch_articles():
     data = request.get_json()
 
     topic: str = data['topic']  # topic of the articles
@@ -40,6 +43,7 @@ def fetch_articles2():
     shuffle(articles)
 
     return jsonify(articles)
+
 
 if __name__ == '__main__':
     app.run(port=8080)

@@ -10,7 +10,7 @@ _ = load_dotenv(find_dotenv())
 news_api_key = os.getenv("NEWS_API_KEY")
 
 
-def generate_topics(topic: str):
+def generate_topic_list(topic: str):
     prompt = f"""# OBJECTIVE
 You are given an [Initial Topic]. From this [Initial Topic], your task is to generate an ordered list of 5 topics.
 The first topic should be equivalent to the [Initial Topic]. If this topic is too specific, broaden it to a more general topic talked about on television.
