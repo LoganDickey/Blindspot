@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
 import { useGameContext } from '@/contexts/gameContext';
 import { withGameOverGuard } from '@/hocs/withGameGuard';
 
@@ -57,12 +58,7 @@ const fetchScoreboard = async (userScore: number): Promise<ScoreEntry[]> => {
 
 const GameOverPage: React.FC = () => {
   const router = useRouter();
-  const {
-    score,
-    articlesRead,
-    selectedTopics,
-    setGameState,
-  } = useGameContext();
+  const { score, articlesRead, setGameState } = useGameContext();
   const [scoreboard, setScoreboard] = useState<ScoreEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -101,11 +97,11 @@ const GameOverPage: React.FC = () => {
           <div>
             <p className='font-semibold'>Topics Covered</p>
             <div className='flex flex-wrap gap-2 mt-2'>
-              {selectedTopics.map((topic, index) => (
+              {/* {selectedTopics.map((topic, index) => (
                 <Badge key={index} variant='secondary'>
                   {topic}
                 </Badge>
-              ))}
+              ))} */}
             </div>
           </div>
         </div>

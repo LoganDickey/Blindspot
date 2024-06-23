@@ -1,12 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+
+import { fetchArticlesForTopic } from '@/app/game/page';
 import { useGameContext } from '@/contexts/gameContext';
 import { withTopicSelectionGuard } from '@/hocs/withGameGuard';
 
@@ -32,26 +42,39 @@ const PLACEHOLDER_TOPICS = [
   'Interstellar cuisine',
 ];
 
+// Function to generate similar topics
+const generateSimilarTopics = async (topic: string) => {
+  const response = await fetch('http://localhost:8080/generate_topics', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ topic }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to generate similar topics');
+  }
+
+  return response.json();
+};
+
 const TopicSelectionPage: React.FC = () => {
   const router = useRouter();
   const {
-    selectedTopics,
-    setSelectedTopics,
-    setGameDuration,
+    setTopics,
+    setArticlesForTopic,
     startNewGame,
     setGameState,
   } = useGameContext();
-  const [localSelectedTopics, setLocalSelectedTopics] = useState<string[]>(
-    selectedTopics
+  const [localSelectedTopic, setLocalSelectedTopic] = useState<string | null>(
+    null
   );
   const [customTopic, setCustomTopic] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [selectedDuration, setSelectedDuration] = useState<number>(120); // Default to 2 minutes
-
-  useEffect(() => {
-    // Update local state if context selectedTopics changes
-    setLocalSelectedTopics(selectedTopics);
-  }, [selectedTopics]);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [generatedTopics, setGeneratedTopics] = useState<string[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -64,34 +87,42 @@ const TopicSelectionPage: React.FC = () => {
   }, []);
 
   const toggleTopic = (topic: string) => {
-    setLocalSelectedTopics((prevTopics) => {
-      const newTopics = prevTopics.includes(topic)
-        ? prevTopics.filter((t) => t !== topic)
-        : [...prevTopics, topic];
-      setSelectedTopics(newTopics); // Update context
-      return newTopics;
-    });
+    setLocalSelectedTopic((prevTopic) => (prevTopic === topic ? null : topic));
   };
 
   const addCustomTopic = () => {
-    if (customTopic && !localSelectedTopics.includes(customTopic)) {
-      setLocalSelectedTopics((prevTopics) => {
-        const newTopics = [...prevTopics, customTopic];
-        setSelectedTopics(newTopics); // Update context
-        return newTopics;
-      });
+    if (customTopic && localSelectedTopic !== customTopic) {
+      setLocalSelectedTopic(customTopic);
       setCustomTopic('');
     }
   };
 
-  const handleStartGame = () => {
-    if (localSelectedTopics.length > 0) {
-      setSelectedTopics(localSelectedTopics);
-      setGameDuration(selectedDuration);
-      startNewGame();
-      setGameState('playing');
-      router.push('/game');
+  const handleStartGame = async () => {
+    if (localSelectedTopic && !isStarting) {
+      setIsStarting(true);
+      try {
+        // Generate similar topics
+        const similarTopics = await generateSimilarTopics(localSelectedTopic);
+        setGeneratedTopics(similarTopics);
+
+        setTopics(similarTopics);
+
+        // Fetch initial articles for the first topic
+        const initialArticles = await fetchArticlesForTopic(similarTopics[0]);
+        setArticlesForTopic(localSelectedTopic, initialArticles);
+
+        setIsDialogOpen(true);
+      } catch (error) {
+        console.error('Failed to start game:', error);
+        setIsStarting(false);
+      }
     }
+  };
+
+  const handleConfirm = () => {
+    startNewGame();
+    setGameState('playing');
+    router.push('/game');
   };
 
   return (
@@ -108,10 +139,10 @@ const TopicSelectionPage: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className='text-4xl font-serif font-bold text-gray-900 text-center mb-8'>
-            Choose Your Topics
+            Choose Your Topic
           </h1>
           <p className='text-xl text-gray-600 text-center mb-12'>
-            Select the subjects you'd like to explore in your fact-checking
+            Select a subject you'd like to explore in your fact-checking
             journey.
           </p>
         </motion.div>
@@ -130,9 +161,7 @@ const TopicSelectionPage: React.FC = () => {
                 >
                   <Badge
                     variant={
-                      localSelectedTopics.includes(topic)
-                        ? 'default'
-                        : 'secondary'
+                      localSelectedTopic === topic ? 'default' : 'secondary'
                     }
                     className='cursor-pointer text-sm px-3 py-1'
                     onClick={() => toggleTopic(topic)}
@@ -158,19 +187,24 @@ const TopicSelectionPage: React.FC = () => {
                 placeholder={`Try "${PLACEHOLDER_TOPICS[placeholderIndex]}"`}
                 className='flex-grow'
               />
-              <Button onClick={addCustomTopic}>Add</Button>
+              <Button
+                onClick={addCustomTopic}
+                disabled={Boolean(localSelectedTopic)}
+              >
+                Add
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         <div className='mb-8'>
           <h2 className='text-2xl font-semibold text-gray-800 mb-4'>
-            Selected Topics
+            Selected Topic
           </h2>
           <div className='flex flex-wrap gap-2'>
-            {localSelectedTopics.map((topic) => (
+            {localSelectedTopic ? (
               <motion.div
-                key={topic}
+                key={localSelectedTopic}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
@@ -179,50 +213,48 @@ const TopicSelectionPage: React.FC = () => {
                 <Badge
                   variant='default'
                   className='cursor-pointer text-sm px-3 py-1'
-                  onClick={() => toggleTopic(topic)}
+                  onClick={() => toggleTopic(localSelectedTopic)}
                 >
-                  {topic} ✕
+                  {localSelectedTopic} ✕
                 </Badge>
               </motion.div>
-            ))}
-            {localSelectedTopics.length === 0 && (
-              <p className='text-gray-500'>No topics selected</p>
+            ) : (
+              <p className='text-gray-500'>No topic selected</p>
             )}
           </div>
         </div>
-
-        <Card className='mb-8'>
-          <CardContent className='pt-6'>
-            <h2 className='text-2xl font-semibold text-gray-800 mb-4'>
-              Game Duration
-            </h2>
-            <div className='flex justify-around'>
-              {[2, 5, 10].map((minutes) => (
-                <Button
-                  key={minutes}
-                  variant={
-                    selectedDuration === minutes * 60 ? 'default' : 'outline'
-                  }
-                  onClick={() => setSelectedDuration(minutes * 60)}
-                >
-                  {minutes} minutes
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         <div className='text-center'>
           <Button
             size='lg'
             onClick={handleStartGame}
-            disabled={localSelectedTopics.length === 0}
+            disabled={!localSelectedTopic || isStarting}
             className='px-8 py-3 text-lg'
           >
-            Start Game
+            {isStarting ? 'Starting Game...' : 'Start Game'}
           </Button>
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Topic Progression</DialogTitle>
+          </DialogHeader>
+          <div className='mt-4'>
+            {generatedTopics.map((topic, index) => (
+              <p key={index} className='text-lg text-gray-700'>
+                Topic {index + 1}: {topic}
+              </p>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleConfirm} className='mt-4'>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
