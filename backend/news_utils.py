@@ -43,7 +43,7 @@ def get_real_article_content(article: dict):
     prompt += f"Description: {article['description']}\n"
     prompt += f"Author: {article['author']}\n"
     prompt += f"Start of Content: {article['content']}\n\n"
-    prompt += "Complete the first two paragraphs of the content. Ensure accuracy.\n"
+    prompt += "Complete the first two paragraphs of the content. Ensure accuracy. Aim for 200 words.\n"
 
     response = model.query(schemas.ArticleContent, prompt)
 
