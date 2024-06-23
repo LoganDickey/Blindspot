@@ -11,7 +11,7 @@ _ = load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-model = ChatOpenAI(temperature=0.5)
+model = ChatOpenAI(temperature=0.7, model='gpt-4o')
 
 
 def query(schema, query):
